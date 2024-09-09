@@ -31,6 +31,10 @@ int G_set_omp_num_threads(struct Option *opt)
         threads += num_logic_procs;
         threads = (threads < 1) ? 1 : threads;
     }
+    if (threads > 1 && G_find_raster("MASK", G_mapset()) != NULL) {
+        G_warning(_("Parallel processing disabled due to active MASK."));
+        threads = 1;
+    }
     omp_set_num_threads(threads);
     G_verbose_message(_("%d threads are set up for parallel computing."),
                       threads);
