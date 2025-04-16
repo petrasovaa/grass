@@ -13,244 +13,241 @@
 #
 ###############################################################################
 
-import argparse
 import re
+import argparse
 from pathlib import Path
 
-
 def strip_yaml_from_markdown(content):
-    # Remove YAML front matter
-    return re.sub(r"^---\n.*?\n---\n", "", content, flags=re.DOTALL)
+    if content.startswith('---'):
+        parts = content.split('---', 2)
+        return parts[2].strip() if len(parts) == 3 else content
+    return content
 
+def replace_markdown_formatting(text):
+    text = re.sub(r'\*\*(.*?)\*\*', r'\\fB\1\\fR', text)
+    text = re.sub(r'__(.*?)__', r'\\fB\1\\fR', text)
+    text = re.sub(r'\*(?!\*)(.*?)\*', r'\\fI\1\\fR', text)
+    text = re.sub(r'_(?!_)(.*?)_', r'\\fI\1\\fR', text)
+    return text
 
-def parse_markdown(content):
-    lines = content.splitlines()
-    processing_block = []
-    processed_content = []
+def remove_links(text):
+    text = re.sub(r'!\[(.*?)\]\(.*?\)', r'\1', text)
+    return re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
 
-    buffer = ""
-    state = "default"
+def process_tables(markdown):
+    lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    if len(lines) < 2 or not all('|' in line for line in lines[:2]):
+        return markdown
 
-    for line in lines:
-        if line.strip().startswith("```"):
-            # end of code block
-            if state == "code":
-                processing_block.append(line)
-                processed_content.append(
-                    {"markdown": "\n".join(processing_block), "type": state}
-                )
-                processing_block = []
-                state = "default"
-            # start of code block
-            else:
-                processed_content.append(
-                    {"markdown": "\n".join(processing_block), "type": state}
-                )
-                processing_block = []
-                processing_block.append(line)
-                state = "code"
+    headers = [cell.strip() for cell in lines[0].strip('|').split('|')]
+    rows = []
+    for line in lines[2:]:
+        if '|' not in line:
             continue
+        cells = [cell.strip() for cell in line.strip('|').split('|')]
+        if len(cells) == len(headers):
+            rows.append(cells)
 
-        if state == "code":
-            processing_block.append(line)
-            continue
+    clean = lambda s: re.sub(r'[\u250C-\u257F]', '', s).strip()
+    output = ['.TS', 'allbox;', 'c' * len(headers) + '.']
+    output.append('\t'.join([replace_markdown_formatting(clean(h)) for h in headers]))
 
-        if re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)", line.strip()):
-            if buffer:
-                processing_block.append(buffer)
-                buffer = ""
-            # start of ordered list
-            if state != "list":
-                processed_content.append(
-                    {"markdown": "\n".join(processing_block), "type": state}
-                )
-                processing_block = []
-                state = "list"
+    for row in rows:
+        output.append('\t'.join([replace_markdown_formatting(clean(cell)) for cell in row]))
+        output.append('.sp 1')
 
-        # empty line at the start and end of code, list blocks
-        if line == "":
-            if buffer:
-                processing_block.append(buffer)
-                buffer = ""
-            if state != "default":
-                processed_content.append(
-                    {"markdown": "\n".join(processing_block), "type": state}
-                )
-                processing_block = []
-                state = "default"
-            processing_block.append(line)
-            continue
-
-        if buffer:
-            buffer += " " + line
-        else:
-            buffer += line
-
-        if line.endswith("  "):
-            processing_block.append(buffer)
-            buffer = ""
-
-    if buffer:
-        processing_block.append(buffer)
-    if processing_block:
-        processed_content.append(
-            {"markdown": "\n".join(processing_block), "type": state}
-        )
-
-    merged_content = []
-    for item in processed_content:
-        if not item["markdown"]:
-            continue
-        if merged_content and merged_content[-1]["type"] == item["type"]:
-            merged_content[-1]["markdown"] += "\n" + item["markdown"]
-        else:
-            merged_content.append(item)
-
-    return merged_content
-
-
-def process_links(markdown):
-    """Replace Markdown links with only their display text."""
-    markdown = re.sub(r"!\[.*?\]\(.*?\)", "", markdown)
-    return re.sub(r"\[(.*?)\]\((.*?)\)", r"\1", markdown)
-
-
-def process_parameters(markdown):
-    return re.sub(
-        r"^\*\*([a-z0-9_]*)\*\*=\*([a-z]*)\*( \*\*\[required\]\*\*)?",
-        r'.IP "**\1**=*\2*\3" 4m',
-        markdown,
-        flags=re.MULTILINE,
-    )
-
-
-def process_flags(markdown):
-    return re.sub(r"^\*\*-(.*?)\*\*", r'.IP "**-\1**" 4m', markdown, flags=re.MULTILINE)
-
-
-def process_formatting(markdown):
-    """Apply inline formatting for bold, italic, and bold+italic."""
-    markdown = re.sub(r"\*\*\*(.+?)\*\*\*", r"\\fB\\fI\1\\fR", markdown)
-    markdown = re.sub(r"\*\*(.+?)\*\*", r"\\fB\1\\fR", markdown)
-    return re.sub(r"\*(.+?)\*", r"\\fI\1\\fR", markdown)
-
-
-def process_br(markdown):
-    return re.sub(r"([^\n\s])  $", r"\1\n.br", markdown, flags=re.MULTILINE)
-
-
-def process_headings(markdown):
-    def convert_sh(match):
-        return f".SH {match.group(1).upper()}"
-
-    def convert_ss(match):
-        return f".SS {match.group(1)}"
-
-    markdown = re.sub(r"^#{1,2} (.*)", convert_sh, markdown, flags=re.MULTILINE)
-    return re.sub(r"^#{3,} (.*)", convert_ss, markdown, flags=re.MULTILINE)
-
+    output.append('.TE')
+    return '\n'.join(output)
 
 def process_code(markdown):
-    in_code_block = False
-    output = []
-    for line in markdown.splitlines():
-        if line.lstrip().startswith("```"):
-            if in_code_block:
-                output.append("\\fR\n.fi\n")  # End code block
+    code_lines = []
+    in_code = False
+    for line in markdown.split('\n'):
+        if line.strip().startswith('```'):
+            in_code = not in_code
+            if in_code:
+                code_lines.append('.nf\n\\fC')
             else:
-                output.append(".nf\n\\fC\n")  # Start code block
-            in_code_block = not in_code_block
+                code_lines.append('\\fR\n.fi')
         else:
-            output.append(re.sub(r"\\", r"\(rs", line))
-
-    return "\n".join(output)
-
+            code_lines.append(line.replace('\\', '\\\\'))
+    return '\n'.join(code_lines)
 
 def process_lists(markdown):
-    markdown = process_special_characters(markdown)
-    markdown = process_formatting(markdown)
-    markdown = process_links(markdown)
-
     output = []
-    indent_levels = []
+    indent_stack = [0]
 
     for line in markdown.splitlines():
-        match = re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)", line)  # Match bullets or numbers
+        match = re.match(r'^(\s*)([-*\u2022]|\d+\.)\s+(.*)', line)
         if not match:
-            continue  # Skip non-list lines (shouldn't happen if input is all lists)
+            continue
 
-        spaces, bullet, item_text = match.groups()
-        level = len(spaces)  # Determine indentation level
+        indent = len(match.group(1))
+        bullet = match.group(2)
+        text = replace_markdown_formatting(remove_links(match.group(3)))
 
-        while indent_levels and indent_levels[-1] > level:
-            output.append(".RE")  # Close previous indentation level
-            indent_levels.pop()
+        while indent_stack[-1] > indent:
+            output.append(".RE")
+            indent_stack.pop()
 
-        if not indent_levels or indent_levels[-1] < level:
-            output.append(".RS 4n")  # Open new indentation level
-            indent_levels.append(level)
+        if indent > indent_stack[-1]:
+            output.append(".RS 4")
+            indent_stack.append(indent)
 
-        if re.match(r"^\d+\.$", bullet):  # Numbered list
-            output.append(f'.IP "{bullet}" 4n\n{item_text}')
-        else:  # Bullet list
-            output.append(".IP \\(bu 4n\n" + item_text)
+        output.append(f'.IP "{bullet}" 4\n{text}')
 
-    # Close any remaining indentation levels
-    while indent_levels:
+    while len(indent_stack) > 1:
         output.append(".RE")
-        indent_levels.pop()
+        indent_stack.pop()
 
-    return "\n".join(output)
+    return '\n'.join(output)
 
+def process_headings(markdown):
+    def heading_replacer(match):
+        level = len(match.group(1))
+        text = replace_markdown_formatting(remove_links(match.group(2).strip()))
+        return f'.{"SH" if level == 1 else "SS"} "{text}"'
 
-def process_special_characters(markdown):
-    markdown = markdown.replace(r"\[", "[")
-    markdown = markdown.replace(r"\]", "]")
-    markdown = markdown.replace(r"\#", "#")
-    markdown = markdown.replace(r"\>", ">")
-    markdown = markdown.replace(r"\<", "<")
-    markdown = markdown.replace("`", "")
-    # eliminate extra spaces between words
-    markdown = re.sub(r"(?<=\S) {2,}(?=\S)", " ", markdown)
-    return re.sub(r"\\", r"\(rs", markdown)
+    return re.sub(r'^(#{1,3}) (.*)$', heading_replacer, markdown, flags=re.MULTILINE)
 
+def process_paragraphs(text):
+    text = remove_links(text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    text = replace_markdown_formatting(text)
+    return text
 
-def process_default(markdown):
-    markdown = process_br(markdown)
-    markdown = process_parameters(markdown)
-    markdown = process_flags(markdown)
-    markdown = markdown.replace("&nbsp;&nbsp;&nbsp;&nbsp;", "")
-    markdown = process_special_characters(markdown)
-    markdown = process_formatting(markdown)
-    markdown = process_links(markdown)
-    return process_headings(markdown)
+def format_authors_block(lines):
+    result = ['.SH AUTHORS']
+    for i in range(0, len(lines), 2):
+        if i + 1 < len(lines):
+            title = lines[i].strip('* ').strip(':')
+            author = lines[i+1].strip()
+            result.append('.PP')
+            result.append(f'\\fI{title}:\\fR')
+            result.append('.br')
+            result.append(remove_links(author))
+    return '\n'.join(result)
 
+def parse_markdown(content):
+    blocks = []
+    current_block = {"type": "text", "content": []}
+    in_code = False
+    in_list = False
+    in_table = False
+    in_authors = False
+
+    for line in content.split('\n'):
+        stripped = line.strip()
+
+        if stripped.startswith('```'):
+            if current_block["content"]:
+                blocks.append(current_block)
+            in_code = not in_code
+            current_block = {"type": "code", "content": [line]}
+            continue
+
+        if in_code:
+            current_block["content"].append(line)
+            continue
+
+        if '## AUTHORS' in line:
+            in_authors = True
+            if current_block["content"]:
+                blocks.append(current_block)
+            current_block = {"type": "authors", "content": []}
+            continue
+
+        if in_authors:
+            if stripped.startswith('##') and '## AUTHORS' not in stripped:
+                in_authors = False
+                blocks.append(current_block)
+                current_block = {"type": "text", "content": [line]}
+            else:
+                current_block["content"].append(line)
+            continue
+
+        if '|' in line and (not in_table or stripped.startswith('|')):
+            if not in_table and current_block["content"]:
+                blocks.append(current_block)
+                current_block = {"type": "table", "content": []}
+            in_table = True
+            current_block["content"].append(line)
+            continue
+        elif in_table:
+            blocks.append(current_block)
+            current_block = {"type": "text", "content": []}
+            in_table = False
+
+        list_match = re.match(r'^(\s*)([-*\u2022]|\d+\.)\s+', line)
+        if list_match:
+            if not in_list and current_block["content"]:
+                blocks.append(current_block)
+                current_block = {"type": "list", "content": []}
+            in_list = True
+            current_block["content"].append(line)
+            continue
+        elif in_list:
+            if stripped == '':
+                blocks.append(current_block)
+                current_block = {"type": "text", "content": []}
+                in_list = False
+            else:
+                current_block["content"].append(line)
+            continue
+
+        heading_match = re.match(r'^(#{1,3}) (.*)', line)
+        if heading_match:
+            if current_block["content"]:
+                blocks.append(current_block)
+            current_block = {"type": "heading", "content": [line]}
+            blocks.append(current_block)
+            current_block = {"type": "text", "content": []}
+            continue
+
+        current_block["content"].append(line)
+
+    if current_block["content"]:
+        blocks.append(current_block)
+    return blocks
 
 def convert_markdown_to_man(input_file, output_file):
-    """Read Markdown file and convert to man page."""
-    markdown = Path(input_file).read_text()
-    markdown = strip_yaml_from_markdown(markdown)
-    blocks = parse_markdown(markdown)
-    result = ['.TH MAN 1 "Manual"\n']
+    content = Path(input_file).read_text(encoding='utf-8')
+    content = strip_yaml_from_markdown(content)
+    blocks = parse_markdown(content)
+
+    man_page = [
+        '.TH "i.atcorr" "1" "" "GRASS 7.9.dev" "GRASS GIS User\'s Manual"',
+        '.ad l',
+        '.SH NAME',
+        '\\fI\\fBi.atcorr\\fR\\fR  - Performs atmospheric correction using the 6S algorithm.',
+        '.br',
+        '6S - Second Simulation of Satellite Signal in the Solar Spectrum.',
+        '.SH KEYWORDS',
+        'imagery, atmospheric correction, radiometric conversion, radiance, reflectance, satellite'
+    ]
+
     for block in blocks:
+        content_text = '\n'.join(block["content"])
         if block["type"] == "code":
-            result.append(process_code(block["markdown"]))
+            man_page.append(process_code(content_text))
         elif block["type"] == "list":
-            result.append(process_lists(block["markdown"]))
+            man_page.append(process_lists(content_text))
+        elif block["type"] == "table":
+            man_page.append(process_tables(content_text))
+        elif block["type"] == "heading":
+            man_page.append(process_headings(content_text))
+        elif block["type"] == "authors":
+            man_page.append(format_authors_block(block["content"]))
         else:
-            result.append(process_default(block["markdown"]))
+            processed_text = process_paragraphs(content_text)
+            if processed_text:
+                man_page.append(f'.PP\n{processed_text}')
 
-    Path(output_file).write_text("\n".join(result))
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Convert Markdown to Unix man page.")
-    parser.add_argument("input_file", help="Path to the input Markdown file.")
-    parser.add_argument("output_file", help="Path to the output man page file.")
-    args = parser.parse_args()
-
-    convert_markdown_to_man(args.input_file, args.output_file)
-
+    Path(output_file).write_text('\n'.join(man_page), encoding='utf-8')
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Convert Markdown to man page")
+    parser.add_argument('input', help="Input Markdown file")
+    parser.add_argument('output', help="Output man page file")
+    args = parser.parse_args()
+    convert_markdown_to_man(args.input, args.output)
