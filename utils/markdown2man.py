@@ -17,27 +17,23 @@ import re
 import argparse
 from pathlib import Path
 
-# Remove YAML front matter from Markdown content
 def strip_yaml_from_markdown(content):
     if content.startswith('---'):
         parts = content.split('---', 2)
         return parts[2].strip() if len(parts) == 3 else content
     return content
 
-# Replace Markdown bold/italic with man page formatting
 def replace_markdown_formatting(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'\\fB\1\\fR', text)
     text = re.sub(r'__(.*?)__', r'\\fB\1\\fR', text)
     text = re.sub(r'\*(?!\*)(.*?)\*', r'\\fI\1\\fR', text)
     text = re.sub(r'_(?!_)(.*?)_', r'\\fI\1\\fR', text)
     return text
-    
-# Remove Markdown-style links while preserving link text
+
 def remove_links(text):
     text = re.sub(r'!\[(.*?)\]\(.*?\)', r'\1', text)
     return re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
 
-# Convert Markdown tables to man page table format
 def process_tables(markdown):
     lines = [line.strip() for line in markdown.splitlines() if line.strip()]
     if len(lines) < 2 or not all('|' in line for line in lines[:2]):
@@ -63,7 +59,6 @@ def process_tables(markdown):
     output.append('.TE')
     return '\n'.join(output)
 
-# Process code blocks in Markdown, formatting for man pages
 def process_code(markdown):
     code_lines = []
     in_code = False
@@ -78,7 +73,6 @@ def process_code(markdown):
             code_lines.append(line.replace('\\', '\\\\'))
     return '\n'.join(code_lines)
 
-# Convert Markdown lists to man page list format
 def process_lists(markdown):
     output = []
     indent_stack = [0]
@@ -108,7 +102,6 @@ def process_lists(markdown):
 
     return '\n'.join(output)
 
-# Convert Markdown headings to man page SH/SS format
 def process_headings(markdown):
     def heading_replacer(match):
         level = len(match.group(1))
@@ -117,14 +110,12 @@ def process_headings(markdown):
 
     return re.sub(r'^(#{1,3}) (.*)$', heading_replacer, markdown, flags=re.MULTILINE)
 
-# Process regular text paragraphs
 def process_paragraphs(text):
     text = remove_links(text)
     text = re.sub(r'\s+', ' ', text).strip()
     text = replace_markdown_formatting(text)
     return text
 
-# Special formatting for AUTHORS section
 def format_authors_block(lines):
     result = ['.SH AUTHORS']
     for i in range(0, len(lines), 2):
@@ -137,7 +128,6 @@ def format_authors_block(lines):
             result.append(remove_links(author))
     return '\n'.join(result)
 
-# Parse Markdown content into blocks of different types
 def parse_markdown(content):
     blocks = []
     current_block = {"type": "text", "content": []}
@@ -220,7 +210,6 @@ def parse_markdown(content):
         blocks.append(current_block)
     return blocks
 
-# Main function to convert Markdown to man page format
 def convert_markdown_to_man(input_file, output_file):
     content = Path(input_file).read_text(encoding='utf-8')
     content = strip_yaml_from_markdown(content)
