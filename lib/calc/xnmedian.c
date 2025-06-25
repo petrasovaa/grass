@@ -44,8 +44,7 @@ static int dcmp(const void *aa, const void *bb)
 
 int f_nmedian(int argc, const int *argt, void **args)
 {
-    static void *array;
-    static int alloc;
+    void *array;
     int size = argc * Rast_cell_size(argt[0]);
     int i, j;
 
@@ -56,10 +55,7 @@ int f_nmedian(int argc, const int *argt, void **args)
         if (argt[i] != argt[0])
             return E_ARG_TYPE;
 
-    if (size > alloc) {
-        alloc = size;
-        array = G_realloc(array, size);
-    }
+    array = G_malloc(size);
 
     switch (argt[0]) {
     case CELL_TYPE: {
