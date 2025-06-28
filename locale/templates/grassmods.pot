@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-24 17:02+0000\n"
+"POT-Creation-Date: 2025-06-28 15:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -182,7 +182,7 @@ msgstr ""
 #: ../raster/r.external/main.c:97 ../raster/r.external/main.c:136
 #: ../raster/r.in.gdal/main.c:238 ../raster/r.in.gdal/main.c:272
 #: ../raster/r.info/main.c:115 ../raster/r.object.geometry/main.c:95
-#: ../raster/r.out.gdal/main.c:142 ../raster/r.profile/main.c:110
+#: ../raster/r.out.gdal/main.c:142 ../raster/r.profile/main.c:113
 #: ../raster/r.proj/main.c:208 ../raster/r.proj/main.c:221
 #: ../raster/r.proj/main.c:233 ../raster/r.proj/main.c:242
 #: ../raster/r.stats/main.c:155 ../raster/r.sunmask/main.c:233
@@ -389,7 +389,7 @@ msgstr ""
 #: ../imagery/i.group/main.c:301 ../raster/r.category/main.c:412
 #: ../raster/r.describe/dumplist.c:69 ../raster/r.info/main.c:997
 #: ../raster/r.mask.status/main.c:111 ../raster/r.object.geometry/main.c:401
-#: ../raster/r.profile/main.c:276 ../raster/r.proj/main.c:370
+#: ../raster/r.profile/main.c:296 ../raster/r.proj/main.c:370
 #: ../raster/r.proj/main.c:545 ../raster/r.report/prt_json.c:200
 #: ../raster/r.stats/main.c:408 ../raster/r.univar/stats.c:431
 #: ../raster/r.what.color/main.c:290 ../raster/r.what/main.c:619
@@ -1758,7 +1758,7 @@ msgstr ""
 #: ../raster/r.out.ppm/main.c:52 ../raster/r.out.ppm3/main.c:57
 #: ../raster/r.out.vrml/main.c:44 ../raster/r.out.vtk/main.c:59
 #: ../raster/r.param.scale/interface.c:52 ../raster/r.patch/main.c:68
-#: ../raster/r.path/main.c:149 ../raster/r.profile/main.c:55
+#: ../raster/r.path/main.c:149 ../raster/r.profile/main.c:56
 #: ../raster/r.proj/main.c:151 ../raster/r.quant/main.c:48
 #: ../raster/r.quantile/main.c:297 ../raster/r.random.cells/main.c:49
 #: ../raster/r.random.surface/main.c:56 ../raster/r.random/main.c:53
@@ -2403,8 +2403,8 @@ msgstr ""
 #: ../display/d.grid/main.c:93 ../display/d.grid/main.c:98
 #: ../display/d.grid/main.c:104 ../display/d.grid/main.c:110
 #: ../raster/r.colors.out/raster3d_main.c:64
-#: ../raster/r.colors.out/raster_main.c:63 ../raster/r.what.color/main.c:218
-#: ../vector/v.colors.out/main.c:74
+#: ../raster/r.colors.out/raster_main.c:63 ../raster/r.profile/main.c:118
+#: ../raster/r.what.color/main.c:218 ../vector/v.colors.out/main.c:74
 msgid "Color"
 msgstr ""
 
@@ -3563,7 +3563,7 @@ msgstr ""
 #: ../misc/m.nviz.script/main.c:198 ../misc/m.transform/main.c:273
 #: ../raster/r.category/main.c:239 ../raster/r.horizon/main.c:430
 #: ../raster/r.in.lidar/main.c:670 ../raster/r.out.ascii/main.c:152
-#: ../raster/r.out.ppm3/main.c:134 ../raster/r.profile/main.c:190
+#: ../raster/r.out.ppm3/main.c:134 ../raster/r.profile/main.c:210
 #: ../raster/r.recode/main.c:89 ../raster3d/r3.out.vtk/main.c:422
 #: ../vector/v.edit/main.c:82 ../vector/v.net/main.c:99
 #: ../vector/v.out.ascii/main.c:129 ../vector/v.out.vtk/main.c:172
@@ -3831,7 +3831,7 @@ msgstr ""
 msgid "Unable to read FP range for %s"
 msgstr ""
 
-#: ../display/d.profile/main.c:194 ../raster/r.profile/main.c:56
+#: ../display/d.profile/main.c:194 ../raster/r.profile/main.c:57
 #: ../raster/r.transect/main.c:103 ../raster3d/r3.cross.rast/main.c:230
 #: ../vector/v.profile/main.c:156
 msgid "profile"
@@ -3849,7 +3849,7 @@ msgstr ""
 msgid "Raster map to be profiled"
 msgstr ""
 
-#: ../display/d.profile/main.c:206 ../raster/r.profile/main.c:72
+#: ../display/d.profile/main.c:206 ../raster/r.profile/main.c:73
 msgid "Profile coordinate pairs"
 msgstr ""
 
@@ -3939,7 +3939,6 @@ msgstr ""
 msgid "Get text color from cell color value"
 msgstr ""
 
-#. GTC Count of window rows
 #. GTC Count of raster rows
 #. GTC Count of window rows
 #: ../display/d.rast.num/main.c:211 ../raster/r.thin/io.c:106
@@ -11824,8 +11823,8 @@ msgstr ""
 msgid "Predict with a Support Vector Machine"
 msgstr ""
 
-#. GTC: SVM prediction input
 #. GTC: SVM training input
+#. GTC: SVM prediction input
 #: ../imagery/i.svm.predict/main.c:60 ../imagery/i.svm.train/main.c:62
 msgid "Maps with feature values (attributes)"
 msgstr ""
@@ -20771,7 +20770,7 @@ msgstr ""
 msgid "Sampling distance step coefficient (0.5-1.5)"
 msgstr ""
 
-#: ../raster/r.horizon/main.c:314 ../raster/r.profile/main.c:67
+#: ../raster/r.horizon/main.c:314 ../raster/r.profile/main.c:68
 msgid "Name of file for output (use output=- for stdout)"
 msgstr ""
 
@@ -24728,87 +24727,87 @@ msgstr ""
 msgid "One coordinate pair per line, please"
 msgstr ""
 
-#: ../raster/r.profile/main.c:57 ../raster/r.transect/main.c:104
+#: ../raster/r.profile/main.c:58 ../raster/r.transect/main.c:104
 #: ../vector/v.profile/main.c:157
 msgid "transect"
 msgstr ""
 
-#: ../raster/r.profile/main.c:59
+#: ../raster/r.profile/main.c:60
 msgid "Outputs the raster map layer values lying on user-defined line(s)."
 msgstr ""
 
-#: ../raster/r.profile/main.c:78
+#: ../raster/r.profile/main.c:79
 msgid "Name of input file containing coordinate pairs"
 msgstr ""
 
-#: ../raster/r.profile/main.c:79
+#: ../raster/r.profile/main.c:80
 msgid "Use instead of the 'coordinates' option. \"-\" reads from stdin."
 msgstr ""
 
-#: ../raster/r.profile/main.c:87
+#: ../raster/r.profile/main.c:88
 msgid "Resolution along profile (default = current region resolution)"
 msgstr ""
 
-#: ../raster/r.profile/main.c:94 ../raster/r.transect/main.c:124
+#: ../raster/r.profile/main.c:95 ../raster/r.transect/main.c:124
 msgid "Output easting and northing in first two columns of four column output"
 msgstr ""
 
-#: ../raster/r.profile/main.c:100
-msgid "Output RRR:GGG:BBB color values for each profile point"
+#: ../raster/r.profile/main.c:101
+msgid "Output color values for each profile point (format controlled by color_format option; default is 'triplet' for plain output, 'hex' for JSON)"
 msgstr ""
 
-#: ../raster/r.profile/main.c:106
+#: ../raster/r.profile/main.c:109
 msgid "If units are not specified, current project units are used. Meters are used by default in geographic (latlon) projects."
 msgstr ""
 
-#: ../raster/r.profile/main.c:123
+#: ../raster/r.profile/main.c:131
 msgid "Either use profile option or coordinate_file  option, but not both"
 msgstr ""
 
-#: ../raster/r.profile/main.c:150
+#: ../raster/r.profile/main.c:158
 #, c-format
 msgid "Illegal resolution %g [%s]"
 msgstr ""
 
-#: ../raster/r.profile/main.c:166
+#: ../raster/r.profile/main.c:173
 #, c-format
 msgid "Using resolution: %g [%s]"
 msgstr ""
 
-#: ../raster/r.profile/main.c:198
+#: ../raster/r.profile/main.c:218
 msgid "Output columns:"
 msgstr ""
 
-#: ../raster/r.profile/main.c:201
+#: ../raster/r.profile/main.c:221
 #, c-format
 msgid "Easting, Northing, Along track dist. [%s], Elevation"
 msgstr ""
 
-#: ../raster/r.profile/main.c:205
+#: ../raster/r.profile/main.c:225
 #, c-format
 msgid "Along track dist. [%s], Elevation"
 msgstr ""
 
-#: ../raster/r.profile/main.c:207
+#: ../raster/r.profile/main.c:227
 msgid " RGB color"
 msgstr ""
 
-#: ../raster/r.profile/main.c:219
+#: ../raster/r.profile/main.c:239
 #, c-format
 msgid "Could not open <%s>"
 msgstr ""
 
-#: ../raster/r.profile/main.c:225
+#: ../raster/r.profile/main.c:245
 #, c-format
 msgid "Invalid coordinates %s %s"
 msgstr ""
 
-#: ../raster/r.profile/main.c:306
+#: ../raster/r.profile/main.c:327
 #, c-format
 msgid "Approx. transect length: %f [%s]"
 msgstr ""
 
-#: ../raster/r.profile/main.c:310
+#: ../raster/r.profile/main.c:331
 msgid "Endpoint coordinates are outside of current region settings"
 msgstr ""
 
@@ -29576,7 +29575,6 @@ msgstr ""
 msgid "Input raster must be of type CELL."
 msgstr ""
 
-#. GTC Count of window columns
 #. GTC Count of raster columns
 #. GTC Count of window columns
 #: ../raster/r.thin/io.c:108 ../raster/r.thin/io.c:179
