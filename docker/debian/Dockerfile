@@ -1,4 +1,4 @@
-FROM debian:bookworm-20240612-slim@sha256:67f3931ad8cb1967beec602d8c0506af1e37e8d73c2a0b38b181ec5d8560d395
+FROM debian:13.3-slim@sha256:77ba0164de17b88dd0bf6cdc8f65569e6e5fa6cd256562998b62553134a00ef0
 
 # apt-get update && apt-get install lsb-release -y && lsb_release -a
 
@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # define versions to be used (PDAL is not available on Debian, so we compile it here)
 # https://github.com/PDAL/PDAL/releases
 # renovate: datasource=github-tags depName=PDAL/PDAL
-ARG PDAL_VERSION=2.7.2
+ARG PDAL_VERSION=2.9.2
 
 SHELL ["/bin/bash", "-c"]
 
@@ -70,7 +70,6 @@ RUN apt-get update && apt-get upgrade -y && \
     python3-pip \
     python3-setuptools \
     python3-venv \
-    software-properties-common \
     sqlite3 \
     subversion \
     unzip \
@@ -192,7 +191,7 @@ ENV GRASS_SKIP_MAPSET_OWNER_CHECK=1
 ENV PROJ_NETWORK=ON
 
 # Create generic GRASS lib name regardless of version number
-RUN ln -sf /usr/local/grass85 /usr/local/grass
+RUN ln -sf /usr/local/grass86 /usr/local/grass
 
 # show GRASS, PROJ, GDAL etc versions
 RUN grass --tmp-project EPSG:4326 --exec g.version -rge && \
