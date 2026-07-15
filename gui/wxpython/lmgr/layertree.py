@@ -87,6 +87,45 @@ LMIcons = {
 }
 
 
+class SuppressedDragImage:
+    """Drop-in replacement for the drag image, showing no drag ghost.
+
+    On macOS, wx.DragImage in wxWidgets 3.2.x draws the ghost through
+    wxOverlay, whose native window is never removed from the screen
+    (wxWidgets issue #26380, fixed only in wxWidgets 3.3): every drag
+    leaves behind a phantom window until the GUI closes. Until the fix
+    reaches wxPython, show no ghost at all. Only the mouse capture which
+    wx.DragImage.BeginDrag() would acquire is kept, so that dragging
+    otherwise behaves the same.
+    """
+
+    def __init__(self, treeCtrl, item):
+        self._window = treeCtrl
+
+    def BeginDrag(self, hotspot, window, fullScreen=False, rect=None):
+        self._window.CaptureMouse()
+        return True
+
+    def Show(self):
+        return True
+
+    def Hide(self):
+        return True
+
+    def Move(self, pt):
+        return True
+
+    def EndDrag(self):
+        if self._window.HasCapture():
+            self._window.ReleaseMouse()
+        return True
+
+
+if sys.platform == "darwin":
+    # Replace the drag image class CustomTreeCtrl instantiates internally.
+    CT.DragImage = SuppressedDragImage
+
+
 class LayerTree(treemixin.DragAndDrop, CT.CustomTreeCtrl):
     """Creates layer tree structure"""
 
