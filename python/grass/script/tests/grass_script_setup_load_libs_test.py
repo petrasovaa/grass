@@ -38,7 +38,10 @@ def run_in_clean_environment(code, tmp_path):
         check=False,
         env=env,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 0, (
+        f"code failed with {result.returncode}\n"
+        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
     return json.loads(result.stdout)
 
 
@@ -48,6 +51,8 @@ def test_grass_lib_usable_with_load_libs(tmp_path):
     project = tmp_path / "test"
     code = f"""
         import json
+        import sys
+
         import grass.script as gs
 
         gs.create_project(r"{project}")
@@ -56,6 +61,17 @@ def test_grass_lib_usable_with_load_libs(tmp_path):
             import grass.lib.raster as libraster
 
             libgis.G_gisinit(b"test")
+            # An error in the C library ends the process before Python can
+            # report anything, so the session the library resolved is written
+            # out right away to tell a wrong session from a failed call.
+            print(
+                "session seen by the C library:",
+                libgis.G_gisdbase(),
+                libgis.G_location(),
+                libgis.G_mapset(),
+                file=sys.stderr,
+                flush=True,
+            )
             gs.run_command("g.region", rows=2, cols=2)
             gs.mapcalc("ones = 1")
             fd = libraster.Rast_open_old(b"ones", b"")
@@ -85,17 +101,28 @@ def test_grass_lib_usable_with_load_libs_and_custom_env(tmp_path):
             import grass.lib.gis as libgis
 
             libgis.G_gisinit(b"test")
+            session = [
+                libgis.G_gisdbase().decode(),
+                libgis.G_location().decode(),
+                libgis.G_mapset().decode(),
+            ]
         print(
             json.dumps(
                 {{
-                    "gis_init_worked": True,
+                    "session_seen_by_c_library": session,
                     "gisbase_in_global_env": "GISBASE" in os.environ,
                 }}
             )
         )
     """
     result = run_in_clean_environment(code, tmp_path=tmp_path)
-    assert result["gis_init_worked"]
+    # The library works with the session which init created, not with another
+    # one it may have found in the environment.
+    assert result["session_seen_by_c_library"] == [
+        str(tmp_path),
+        project.name,
+        "PERMANENT",
+    ]
     # The session did not fall back to the global environment for the lookup.
     assert not result["gisbase_in_global_env"]
 
