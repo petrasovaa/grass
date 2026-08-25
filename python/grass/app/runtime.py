@@ -356,6 +356,36 @@ def register_library_search_path(install_path):
     _registered_library_dirs.add(lib_path)
 
 
+# Variables the C libraries read with getenv: GISBASE to find the files of the
+# installation and GISRC to find the session.
+LIBRARY_ENVIRONMENT_VARIABLES = ("GISBASE", "GISRC")
+
+
+def set_library_environment(env):
+    """Set variables from _env_ in the environment which the C libraries read
+
+    The libraries use getenv, which reads the environment of the process, not
+    the session environment (the _env_ parameter of
+    :func:`grass.script.setup.init`). On Windows, the C runtime keeps its own
+    copy of the environment made when the process started, so there even
+    changes to the global environment do not reach the libraries.
+
+    Without GISBASE, reporting an error fails in the same way as the call
+    which caused it, and the library ends the process without a message, so
+    the variables are needed even to see what is wrong.
+    """
+    try:
+        from grass.lib.gis import G_putenv
+    except ImportError:
+        # The grass.lib package is generated during the build and an
+        # installation may be missing it.
+        return
+    for name in LIBRARY_ENVIRONMENT_VARIABLES:
+        value = env.get(name)
+        if value:
+            G_putenv(name, value)
+
+
 # Every other GRASS library needs libgrass_gis and libgrass_gis needs
 # libgrass_datetime, so these two are loaded before the rest. A library loaded
 # before the GRASS libraries it needs makes the dynamic linker resolve those

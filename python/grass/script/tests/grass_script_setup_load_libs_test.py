@@ -25,6 +25,8 @@ def run_in_clean_environment(code, tmp_path):
     The variable is what a parent GRASS session or a manual setup uses to make
     the GRASS libraries available, so removing it leaves the loading done by
     init as the only mechanism which can make grass.lib work.
+
+    :returns: the completed process, so that the output streams are available
     """
     source_file = tmp_path / "code.py"
     source_file.write_text(dedent(code))
@@ -42,7 +44,7 @@ def run_in_clean_environment(code, tmp_path):
         f"code failed with {result.returncode}\n"
         f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
-    return json.loads(result.stdout)
+    return result
 
 
 @pytest.mark.usefixtures("mock_no_session")
@@ -51,8 +53,6 @@ def test_grass_lib_usable_with_load_libs(tmp_path):
     project = tmp_path / "test"
     code = f"""
         import json
-        import sys
-
         import grass.script as gs
 
         gs.create_project(r"{project}")
@@ -61,33 +61,24 @@ def test_grass_lib_usable_with_load_libs(tmp_path):
             import grass.lib.raster as libraster
 
             libgis.G_gisinit(b"test")
-            # An error in the C library ends the process before Python can
-            # report anything, so the session the library resolved is written
-            # out right away to tell a wrong session from a failed call.
-            print(
-                "session seen by the C library:",
-                libgis.G_gisdbase(),
-                libgis.G_location(),
-                libgis.G_mapset(),
-                file=sys.stderr,
-                flush=True,
-            )
             gs.run_command("g.region", rows=2, cols=2)
             gs.mapcalc("ones = 1")
             fd = libraster.Rast_open_old(b"ones", b"")
             libraster.Rast_close(fd)
         print(json.dumps({{"raster_opened": True}}))
     """
-    assert run_in_clean_environment(code, tmp_path=tmp_path)["raster_opened"]
+    result = run_in_clean_environment(code, tmp_path=tmp_path)
+    assert json.loads(result.stdout)["raster_opened"]
 
 
 @pytest.mark.usefixtures("mock_no_session")
 def test_grass_lib_usable_with_load_libs_and_custom_env(tmp_path):
     """Check that grass.lib is usable with load_libs and a custom environment
 
-    The grass.lib loader reads GISBASE from the global environment, so a
-    session which keeps its variables in its own environment needs the path
-    to the libraries passed to the loader directly.
+    A session which keeps its variables in its own environment reaches the
+    libraries only through the loader and through the environment of the
+    libraries themselves, because they read neither the session environment
+    nor, on Windows, the global one.
     """
     project = tmp_path / "test"
     code = f"""
@@ -115,7 +106,7 @@ def test_grass_lib_usable_with_load_libs_and_custom_env(tmp_path):
             )
         )
     """
-    result = run_in_clean_environment(code, tmp_path=tmp_path)
+    result = json.loads(run_in_clean_environment(code, tmp_path=tmp_path).stdout)
     # The library works with the session which init created, not with another
     # one it may have found in the environment.
     assert result["session_seen_by_c_library"] == [
@@ -125,6 +116,30 @@ def test_grass_lib_usable_with_load_libs_and_custom_env(tmp_path):
     ]
     # The session did not fall back to the global environment for the lookup.
     assert not result["gisbase_in_global_env"]
+
+
+@pytest.mark.usefixtures("mock_no_session")
+def test_library_messages_are_reported(tmp_path):
+    """Check that a message from the C libraries reaches the standard error
+
+    Printing a message needs GISBASE, so a library which does not have it
+    fails to report the failure as well and ends the process without saying
+    anything at all.
+    """
+    project = tmp_path / "test"
+    code = f"""
+        import os
+        import grass.script as gs
+
+        gs.create_project(r"{project}")
+        with gs.setup.init(r"{project}", env=os.environ.copy(), load_libs=True):
+            import grass.lib.gis as libgis
+
+            libgis.G_warning(b"message from the library")
+        print("{{}}")
+    """
+    result = run_in_clean_environment(code, tmp_path=tmp_path)
+    assert "message from the library" in result.stderr
 
 
 @pytest.mark.usefixtures("mock_no_session")

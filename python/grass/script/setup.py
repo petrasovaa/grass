@@ -222,6 +222,7 @@ def setup_runtime_env(gisbase=None, *, env=None, load_libs=False):
         register_library_search_path,
         set_dynamic_library_path,
         set_executable_paths,
+        set_library_environment,
         set_path_to_python_executable,
         set_python_path_variable,
         RuntimePaths,
@@ -263,6 +264,9 @@ def setup_runtime_env(gisbase=None, *, env=None, load_libs=False):
         # the libraries into the current process for ctypes-based interfaces.
         register_library_search_path(install_path=gisbase)
         preload_dynamic_libraries(install_path=gisbase)
+        # The libraries read the installation path from their own environment.
+        # A session adds its variables to this later (see init).
+        set_library_environment(env)
     set_python_path_variable(install_path=gisbase, env=env)
     set_path_to_python_executable(env=env)
 
@@ -324,6 +328,15 @@ def init(
     explicitly. This is not done by default because it loads the whole
     GRASS C stack and its dependencies (GDAL, PROJ, ...) into the process,
     which sessions using only tools don't need.
+
+    With *load_libs*, the session variables are also set in the environment
+    of the loaded libraries, which the libraries read for themselves and
+    which is shared by the whole process. Consequently, the last session
+    initialized in a process is the one :mod:`grass.lib` works with, even
+    when the sessions keep their variables in their own environments.
+    Subprocesses started without an explicit environment inherit that
+    environment, so they see the session even when it is otherwise limited
+    to *env*.
 
     When the path or specified mapset does not exist, ValueError is raised.
 
@@ -439,6 +452,12 @@ def init(
     env["GISRC"] = write_gisrc(
         mapset_path.directory, mapset_path.location, mapset_path.mapset
     )
+    if load_libs:
+        # The libraries were loaded before the session file existed, so they
+        # learn about the session only now.
+        from grass.app.runtime import set_library_environment
+
+        set_library_environment(env)
     return SessionHandle(env=env, locked=lock)
 
 
