@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-14 20:04+0000\n"
+"POT-Creation-Date: 2026-11-21 21:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18409,8 +18409,7 @@ msgstr ""
 #: ../raster/r.mapcalc/main.c:176 ../raster/r.series.accumulate/main.c:204
 #: ../raster/r.series.interp/main.c:129 ../raster/r.series.interp/main.c:133
 #: ../raster/r.series.interp/main.c:145 ../raster/r.series.interp/main.c:149
-#: ../temporal/t.remove/t.remove.py:77
-#: ../temporal/t.unregister/t.unregister.py:60 ../vector/v.colors/main.c:219
+#: ../temporal/t.remove/t.remove.py:77 ../vector/v.colors/main.c:219
 #, c-format, python-format
 msgid "%s= and %s= are mutually exclusive"
 msgstr ""
@@ -19458,7 +19457,8 @@ msgstr ""
 msgid "Use the 'Knight's move'; slower, but more accurate"
 msgstr ""
 
-#: ../raster/r.cost/main.c:254 ../raster/r.walk/main.c:340
+#: ../raster/r.cost/main.c:254 ../raster/r.neighbors/main.c:290
+#: ../raster/r.walk/main.c:340
 msgid "Keep null values in output raster map"
 msgstr ""
 
@@ -21494,7 +21494,7 @@ msgid "Option %s must be >= 0"
 msgstr ""
 
 #: ../raster/r.in.bin/main.c:448 ../raster/r.in.bin/main.c:454
-#: ../raster/r.neighbors/main.c:304 ../raster/r.out.bin/main.c:388
+#: ../raster/r.neighbors/main.c:310 ../raster/r.out.bin/main.c:388
 #: ../raster/r.stats.quantile/main.c:734
 #, c-format
 msgid "-%c and %s= are mutually exclusive"
@@ -23493,7 +23493,7 @@ msgid "r3.mapcalc does not support parallel execution."
 msgstr ""
 
 #: ../raster/r.mapcalc/main.c:251 ../raster/r.mfilter/main.c:124
-#: ../raster/r.neighbors/main.c:301 ../raster/r.patch/main.c:105
+#: ../raster/r.neighbors/main.c:307 ../raster/r.patch/main.c:105
 #: ../raster/r.resamp.filter/main.c:486 ../raster/r.resamp.interp/main.c:123
 #: ../raster/r.resamp.stats/main.c:438 ../raster/r.series/main.c:222
 #: ../raster/r.slope.aspect/main.c:300 ../raster/r.texture/main.c:316
@@ -23751,39 +23751,39 @@ msgstr ""
 msgid "Do not align output with the input"
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:293
+#: ../raster/r.neighbors/main.c:299
 msgid "Neighborhood size must be positive"
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:295
+#: ../raster/r.neighbors/main.c:301
 msgid "Neighborhood size must be odd"
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:309
+#: ../raster/r.neighbors/main.c:315
 msgid "File with weighting matrix is missing."
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:315
+#: ../raster/r.neighbors/main.c:321
 #, c-format
 msgid "Weighting function '%s' requires a %s."
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:346
+#: ../raster/r.neighbors/main.c:352
 #, c-format
 msgid "%s= and %s= must have the same number of values"
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:381
+#: ../raster/r.neighbors/main.c:387
 #, c-format
 msgid "Computing %s weights..."
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:407
+#: ../raster/r.neighbors/main.c:413
 #, c-format
 msgid "Method %s not compatible with weighing window, using weight mask instead"
 msgstr ""
 
-#: ../raster/r.neighbors/main.c:456
+#: ../raster/r.neighbors/main.c:462
 #, c-format
 msgid "Opening selection map <%s>"
 msgstr ""
@@ -36635,28 +36635,35 @@ msgstr ""
 msgid "Unable to temporally shift the space time %s dataset <%s>"
 msgstr ""
 
-#: ../temporal/t.unregister/t.unregister.py:63
-#: ../vector/v.external.out/args.c:98
-#, c-format, python-format
-msgid "%s= or %s= must be specified"
+#: ../temporal/t.unregister/t.unregister.py:72
+msgid "Unable to connect to a temporal database in the current mapset. Nothing to unregister"
 msgstr ""
 
-#: ../temporal/t.unregister/t.unregister.py:109
-msgid "Unregister maps"
+#: ../temporal/t.unregister/t.unregister.py:87
+#, python-brace-format
+msgid "Maps can only be unregistered from a space time dataset in the current mapset, but <{mapid}> is in mapset <{mapset}>"
 msgstr ""
 
-#: ../temporal/t.unregister/t.unregister.py:136
-#, python-format
-msgid "Unable to find %s map <%s> in temporal database"
+#: ../temporal/t.unregister/t.unregister.py:119
+#, python-brace-format
+msgid "Unable to read map list from file <{filename}>: {error}"
 msgstr ""
 
-#: ../temporal/t.unregister/t.unregister.py:150
-#, python-format
-msgid "Unregister maps from space time dataset <%s>"
+#: ../temporal/t.unregister/t.unregister.py:128
+msgid "Collecting SQL statements to unregister {} maps"
 msgstr ""
 
-#: ../temporal/t.unregister/t.unregister.py:152
-msgid "Unregister maps from the temporal database"
+#: ../temporal/t.unregister/t.unregister.py:155
+#, python-brace-format
+msgid "Unable to find {map_type} map <{map_id}> in temporal database"
+msgstr ""
+
+#: ../temporal/t.unregister/t.unregister.py:168
+msgid "Unregistering maps from space time dataset <{}>"
+msgstr ""
+
+#: ../temporal/t.unregister/t.unregister.py:173
+msgid "Unregistering maps from the temporal database"
 msgstr ""
 
 #: ../temporal/t.vect.observe.strds/t.vect.observe.strds.py:98
@@ -39129,6 +39136,11 @@ msgstr ""
 
 #: ../vector/v.external.out/args.c:80
 msgid "Print current status in shell script style"
+msgstr ""
+
+#: ../vector/v.external.out/args.c:98
+#, c-format
+msgid "%s= or %s= must be specified"
 msgstr ""
 
 #: ../vector/v.external.out/args.c:101
